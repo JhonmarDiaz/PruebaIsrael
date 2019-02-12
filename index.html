@@ -1,104 +1,90 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Capture Photo</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 
-    <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
-    <script type="text/javascript" charset="utf-8">
+<script src="https://maps.googleapis.com/maps/api/js?libraries=geometry&key=AIzaSyAvBQ1Q9FjYfxdWJF6KPmO822RMMbY2w2o"></script>
 
-    var pictureSource;   // picture source
-    var destinationType; // sets the format of returned value
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<style>
+#Mapa {
+  height:400px;
+  width:100%;
+}
+/* Optional: Makes the sample page fill the window. */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+</style>
+<script type="text/javascript" charset="utf-8">
+$(document).ready(function () {
 
-    // Wait for device API libraries to load
-    //
-    document.addEventListener("deviceready",onDeviceReady,false);
+          function localizacion(posicion) {
 
-    // device APIs are available
-    //
-    function onDeviceReady() {
-        pictureSource=navigator.camera.PictureSourceType;
-        destinationType=navigator.camera.DestinationType;
-    }
+            console.log(posicion.coords);
 
-    // Called when a photo is successfully retrieved
-    //
-    function onPhotoDataSuccess(imageData) {
-      // Uncomment to view the base64-encoded image data
-      // console.log(imageData);
 
-      // Get image handle
-      //
-      var smallImage = document.getElementById('smallImage');
+            var latitud = 39.579745;
+            var longitud = 2.654018;
 
-      // Unhide image elements
-      //
-      smallImage.style.display = 'block';
+            //Generamos el mapa que muestre y cual será el punto central
+            var map = new google.maps.Map(document.getElementById('Mapa'), {
+              center: {
+                lat: latitud,
+                lng: longitud
+              },
+              zoom: 14
+            });
 
-      // Show the captured photo
-      // The inline CSS rules are used to resize the image
-      //
-      smallImage.src = "data:image/jpeg;base64," + imageData;
-    }
+            //Generamos el marcadores para señalar una posición
+            var markerMiPosicion = new google.maps.Marker({
+              position: {
+                lat: latitud,
+                lng: longitud
+              },
+              title: "Ubicación estudiante"
+            });
 
-    // Called when a photo is successfully retrieved
-    //
-    function onPhotoURISuccess(imageURI) {
-      // Uncomment to view the image file URI
-      // console.log(imageURI);
+            $('#UbicacionPersonal').click(function () {
+              latitudReal = posicion.coords.latitude;
+              longitudReal = posicion.coords.longitude;
+              var markerPosicionReal = new google.maps.Marker({
+                position: {
+                  lat: latitudReal,
+                  lng: longitudReal
+                },
+                title: "Mi actual ubicación"
+              });
+              markerPosicionReal.setMap(map);
+              map.setCenter(markerPosicionReal.getPosition());
 
-      // Get image handle
-      //
-      var largeImage = document.getElementById('largeImage');
+            });
 
-      // Unhide image elements
-      //
-      largeImage.style.display = 'block';
 
-      // Show the captured photo
-      // The inline CSS rules are used to resize the image
-      //
-      largeImage.src = imageURI;
-    }
+            // Mostramos los marcadores en el mapa.
+            markerMiPosicion.setMap(map);
 
-    // A button will call this function
-    //
-    function capturePhoto() {
-      // Take picture using device camera and retrieve image as base64-encoded string
-      navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 50,
-        destinationType: destinationType.DATA_URL });
-    }
 
-    // A button will call this function
-    //
-    function capturePhotoEdit() {
-      // Take picture using device camera, allow edit, and retrieve image as base64-encoded string
-      navigator.camera.getPicture(onPhotoDataSuccess, onFail, { quality: 20, allowEdit: true,
-        destinationType: destinationType.DATA_URL });
-    }
+          }
 
-    // A button will call this function
-    //
-    function getPhoto(source) {
-      // Retrieve image file location from specified source
-      navigator.camera.getPicture(onPhotoURISuccess, onFail, { quality: 50,
-        destinationType: destinationType.FILE_URI,
-        sourceType: source });
-    }
+          // En caso de no poder geolocalizar hay que tener un mensaje de error (o acción)
+          function error() {
+            alert('No se puede obtener tu ubicación actual')
+            // un error a valorar es que el usuario no permite la geoloc, code:1
+          }
 
-    // Called if something bad happens.
-    //
-    function onFail(message) {
-      alert('Failed because: ' + message);
-    }
 
-    </script>
-  </head>
-  <body>
-    <button onclick="capturePhoto();">Capture Photo</button> <br>
-    <button onclick="capturePhotoEdit();">Capture Editable Photo</button> <br>
-    <button onclick="getPhoto(pictureSource.PHOTOLIBRARY);">From Photo Library</button><br>
-    <button onclick="getPhoto(pictureSource.SAVEDPHOTOALBUM);">From Photo Album</button><br>
-    <img style="display:none;width:60px;height:60px;" id="smallImage" src="" />
-    <img style="display:none;" id="largeImage" src="" />
-  </body>
-</html>
+          // Ahora empleamos todo lo declarado anteriormente.
+          // Comprobamos si el navegador soporta la geolocalización
+          if (navigator.geolocation) {
+            //Caso SI soporta geolocalización. Ejecuto la API y llamo a mis funciones.
+            navigator.geolocation.getCurrentPosition(localizacion, error);
+          } else {
+            //Caso NO soporta geolocalización
+            alert('Navegador NO soporta geolocalización');
+          }
+        });
+</script>
+<div class="col-md-12 col-sm-12">
+  <input type="button" id="UbicacionPersonal" value="Mi ubicación">
+</div>
+<div class="col-md-12 col-sm-12" id="Mapa"></div>
